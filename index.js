@@ -1,6 +1,8 @@
+require('dotenv').config({path:'.env'})
 const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
+const Person = require('./models/person')
 const app = express()
 
 app.use(express.json())
@@ -8,47 +10,21 @@ app.use(morgan(':method :url :status :res[content-length] - :response-time ms'))
 app.use(cors())
 app.use(express.static('build'))
 
-let persons = [
-  {
-    id: 1,
-    name: "Arto Hellas",
-    number: "12345"
-  },
-  {
-    id: 2,
-    name: "Ada Lovelace",
-    number: "23456"
-  },
-  {
-    id: 3,
-    name: "Dan Abramov",
-    number: "34567"
-  },
-  {
-    id: 4,
-    name: "Mary Poppendick",
-    number: "45678"
-  }
-]
 
 app.get('/', (req, res) => {
     res.send('<h1>Hello World!</h1>')
 })
   
 app.get('/api/persons', (req, res) => {
-    console.log('kutsutaan get')
+  Person.find({}).then(persons => {
     res.json(persons)
   })
+})
 
 app.get('/api/persons/:id', (request, response) => {
-  const id = Number(request.params.id)
-  const person = persons.find(person => person.id === id)
-
-  if (person) {
+  Person.findById(request.params.id).then(person => {
     response.json(person)
-  } else {
-    response.status(404).end()
-  }
+  })
 })
 
 app.get('/info', (request, response) => {
@@ -74,8 +50,11 @@ const generateId = () => {
 
 app.post('/api/persons', (request, response) => {
   const body = request.body
+  console.log("Body", body)
 
-  if (!body.name) {
+/*   if (body.content === undefined) {
+    return response.status(400).json({error: 'Content missing'})
+  } else if (!body.name) {
     return response.status(400).json({
       error: 'Name missing'
     })
@@ -84,29 +63,31 @@ app.post('/api/persons', (request, response) => {
       error: 'Number missing'
     })
   } else {
-    existing_persons = persons.filter(person => {
-      console.log("Person.name", person.name)
-      console.log("Person", body.name)
+    console.log('3')
+     existing_persons = persons.filter(person => {
       return person.name === body.name
     })
-    console.log(existing_persons)
+    console.log('4')
+    console.log("Existing", existing_persons)
 
     if (existing_persons.length > 0) {
       return response.status(400).json({
         error: 'Name already exists'
       })
     }
-  }
+  } */ 
 
-  const person = {
+  const person = new Person ({
     id: generateId(),
     name: body.name,
     number: body.number
-  }
+  })
 
-  persons = persons.concat(person)
+  console.log('Person', person)
 
-  response.json(person)
+  person.save().then(savedPerson => {
+    response.json(savedPerson)
+  })
 })
 
 const PORT = process.env.PORT || 3001
