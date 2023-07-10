@@ -3,13 +3,14 @@ const mongoose = require('mongoose')
 const password = process.env.PASSWORD
 
 const url = process.env.MONGO
-
 mongoose.set('strictQuery', false)
 mongoose.connect(url)
     .then(result => {
+        console.log(url)
         console.log('Connected to DB')
     })
     .catch((error) => {
+        console.log(url)
         console.log(error)
         console.log('Connection error')
     })
