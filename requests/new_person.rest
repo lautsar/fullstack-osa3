@@ -1,7 +1,6 @@
-POST https://fullstack-osa3.onrender.com/api/persons
-Content-Type: application/json
+POST https://fullstack-osa3.onrender.com/api/persons Content-Type: application/json
 
 {
-    "name" : "Posti-Pate",
-    "number" : "479593"
+    "name" : "Posti-Pate", "number" : "479593"
+
 }
