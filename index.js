@@ -1,4 +1,4 @@
-require('dotenv').config({path:'.env'})
+require('dotenv').config({ path:'.env' })
 const express = require('express')
 const morgan = require('morgan')
 const cors = require('cors')
@@ -12,9 +12,9 @@ app.use(express.static('build'))
 
 
 app.get('/', (req, res) => {
-    res.send('<h1>Hello World!</h1>')
+  res.send('<h1>Hello World!</h1>')
 })
-  
+
 app.get('/api/persons', (request, response, next) => {
   Person.find({}).then(persons => {
     response.json(persons)
@@ -37,13 +37,12 @@ app.get('/info', (request, response) => {
     .then(persons => {
       return response.send(`<p> Phonebook has info for ${persons.length} people</p><p>${datetime}</p>`)
     })
-    
 })
 
 
 app.delete('/api/persons/:id', (request, response, next) => {
   Person.findByIdAndRemove(request.params.id)
-    .then(result => {
+    .then(response => {
       response.status(204).end()
     })
     .catch(error => next(error))
@@ -55,33 +54,8 @@ const generateId = () => {
   return newId
 }
 
-app.post('/api/persons', (request, response) => {
+app.post('/api/persons', (request, response, next) => {
   const body = request.body
-
-/*   if (body.content === undefined) {
-    return response.status(400).json({error: 'Content missing'})
-  } else if (!body.name) {
-    return response.status(400).json({
-      error: 'Name missing'
-    })
-  } else if (!body.number) {
-    return response.status(400).json({
-      error: 'Number missing'
-    })
-  } else {
-    console.log('3')
-     existing_persons = persons.filter(person => {
-      return person.name === body.name
-    })
-    console.log('4')
-    console.log("Existing", existing_persons)
-
-    if (existing_persons.length > 0) {
-      return response.status(400).json({
-        error: 'Name already exists'
-      })
-    }
-  } */ 
 
   const person = new Person ({
     id: generateId(),
@@ -94,10 +68,11 @@ app.post('/api/persons', (request, response) => {
   person.save().then(savedPerson => {
     response.json(savedPerson)
   })
+    .catch(error => next(error))
 })
 
 const unknownEndpoint = (request, response) => {
-  response.status(404).send({error: 'Unknown endpoint'})
+  response.status(404).send({ error: 'Unknown endpoint' })
 }
 
 app.use(unknownEndpoint)
@@ -106,8 +81,10 @@ const errorHandler = (error, request, response, next) =>  {
   console.error(error.message)
 
   if (error.name === 'CastError') {
-    return response.status(400).send({error: 'Incorrect id'})
-  } 
+    return response.status(400).send({ error: 'Incorrect id' })
+  } else if (error.name === 'ValidationError') {
+    return response.status(400).json({ error: error.message })
+  }
   next(error)
 }
 
