@@ -15,31 +15,38 @@ app.get('/', (req, res) => {
     res.send('<h1>Hello World!</h1>')
 })
   
-app.get('/api/persons', (req, res) => {
+app.get('/api/persons', (request, response, next) => {
   Person.find({}).then(persons => {
-    res.json(persons)
+    response.json(persons)
   })
+    .catch(error => next(error))
 })
 
-app.get('/api/persons/:id', (request, response) => {
-  Person.findById(request.params.id).then(person => {
-    response.json(person)
-  })
+app.get('/api/persons/:id', (request, response, next) => {
+  Person.findById(request.params.id)
+    .then(person => {
+      return response.json(person)
+    })
+    .catch(error => next(error))
 })
 
 app.get('/info', (request, response) => {
   const datetime = new Date()
 
-  return (
-    response.send(`<p> Phonebook has info for ${persons.length} people</p><p>${datetime}</p>`)
-  )
+  Person.find({})
+    .then(persons => {
+      return response.send(`<p> Phonebook has info for ${persons.length} people</p><p>${datetime}</p>`)
+    })
+    
 })
 
-app.delete('/api/persons/:id', (request, response) => {
+
+app.delete('/api/persons/:id', (request, response, next) => {
   Person.findByIdAndRemove(request.params.id)
     .then(result => {
       response.status(204).end()
     })
+    .catch(error => next(error))
 })
 
 const generateId = () => {
@@ -88,6 +95,23 @@ app.post('/api/persons', (request, response) => {
     response.json(savedPerson)
   })
 })
+
+const unknownEndpoint = (request, response) => {
+  response.status(404).send({error: 'Unknown endpoint'})
+}
+
+app.use(unknownEndpoint)
+
+const errorHandler = (error, request, response, next) =>  {
+  console.error(error.message)
+
+  if (error.name === 'CastError') {
+    return response.status(400).send({error: 'Incorrect id'})
+  } 
+  next(error)
+}
+
+app.use(errorHandler)
 
 const PORT = process.env.PORT || 3001
 app.listen(PORT, () => {
